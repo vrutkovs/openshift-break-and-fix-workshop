@@ -1,0 +1,45 @@
+ansible_python_interpreter: "/usr/bin/python"
+ansible_ssh_private_key_file: "playbooks/files/ssh-privatekey"
+ansible_user: "centos"
+aws_region: "us-east-1"
+ansible_become: true
+
+deployment_type: origin
+
+openshift_master_cluster_public_hostname: "{{ inventory_hostname.split('-')[1] }}.vrutkovs.eu"
+openshift_master_default_subdomain: "{{ inventory_hostname.split('-')[1] }}.vrutkovs.eu"
+
+openshift_master_identity_providers:
+- name: htpasswd_provider
+  challenge: true
+  login: true
+  kind: HTPasswdPasswordIdentityProvider
+
+openshift_master_htpasswd_users:
+  "clusteradmin": "$apr1$JVrvZ9dU$TRethyJZEs0O8HSd95TsG0" #redhat
+  "admin": "$apr1$hbmUVwgd$g647TR5ohBvlJliJYqRcB/" #openshift
+
+openshift_enable_excluders: false
+openshift_disable_check: memory_availability,disk_availability
+openshift_install_examples: false
+docker_upgrade: false
+
+osn_storage_plugin_deps: []
+
+os_firewall_enabled: true
+os_firewall_use_firewalld: true
+
+# Consoles
+openshift_web_console_install: true
+openshift_console_install: true
+
+# Disable services
+openshift_cluster_monitoring_operator_install: false
+openshift_management_install_management: false
+openshift_metrics_install_metrics: false
+openshift_logging_install_logging: false
+openshift_enable_service_catalog: false
+template_service_broker_install: false
+openshift_hosted_manage_registry_console: false
+openshift_hosted_grafana_deploy: false
+openshift_hosted_prometheus_deploy: false

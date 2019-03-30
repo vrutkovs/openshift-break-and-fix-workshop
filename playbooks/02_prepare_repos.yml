@@ -1,0 +1,8 @@
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - wait_for_connection: {}
+    - copy:
+        src: files/origin.repo
+        dest: /etc/yum.repos.d

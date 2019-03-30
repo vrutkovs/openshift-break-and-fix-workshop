@@ -1,0 +1,15 @@
+[centos-origin-3.11-candidate]
+name=centos origin 3.11 candidate
+baseurl=https://cbs.centos.org/repos/paas7-openshift-origin311-candidate/x86_64/os
+enabled=1
+gpgcheck = 0
+skip_if_unavailable = 1
+keepcache = 0
+
+[latest-origin-3.11]
+name=latest origin 3.11 packages
+baseurl=https://rpms.svc.ci.openshift.org/openshift-origin-v3.11/
+enabled=1
+gpgcheck = 0
+skip_if_unavailable = 1
+keepcache = 0

@@ -1,0 +1,64 @@
+---
+vm_prefix: "cluster"
+
+aws_user: "centos"
+python: "/usr/bin/python"
+
+# initial private key
+initial_privatekey: "/home/vrutkovs/src/openshift-ansible/inventory/dynamic/injected/ssh-privatekey"
+aws_key: "libra"
+
+aws_region: "us-east-1"
+aws_cluster_id: "vrutkovs"
+# us-east-1d
+#aws_subnet: "subnet-cf57c596"
+
+#aws_expiration_date: "{{ lookup('pipe','date -d \"4 hours\" --iso=minutes --utc') }}"
+aws_expiration_date: "2019-04-21T23:47+00:00"
+
+vms:
+- aws_flavor: t2.large
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-0"
+- aws_flavor: t2.large
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-01"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-02"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-03"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-04"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-05"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-06"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-07"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-08"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-09"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-10"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-11"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-12"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-13"
+- aws_flavor: t2.medium
+  aws_image: "ami-02eac2c0129f6376b"
+  name_template: "{{ vm_prefix }}-14"

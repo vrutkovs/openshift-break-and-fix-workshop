@@ -1,0 +1,8 @@
+---
+- shell: |
+    oc -n production patch dc/vektor --type='json' -p='[{"op": "remove", "path": "/spec/template/spec/containers/0/ports"]'
+    oc -n production patch svc/vektor --type='json' -p='[{"op": "remove", "path": "/spec/ports/1"}]'
+
+    oc -n production patch svc/vektor --type='json' -p='[{"op": "replace", "path": "/spec/ports/0", "value": {"name": "8080-tcp", "port": 8080, "protocol": TCP, "targetPort": 80}}]'
+
+    oc -n production scale --replicas=1 dc/vektor

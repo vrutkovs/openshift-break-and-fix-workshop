@@ -1,0 +1,5 @@
+---
+- shell: |
+    oc -n production patch dc/vektor --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/livenessProbe", "value": {"failureThreshold": "3", "httpGet": {"path": "/index.htm", "port": 8080, "scheme": "HTTPS"}}}]'
+    oc -n production patch dc/vektor --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/readinessProbe", "value": {"failureThreshold": "3", "httpGet": {"path": "/index.htm", "port": 8080, "scheme": "HTTP"}, "initialDelaySeconds": 1, "periodSeconds": 10, "successThreshold": 1, "timeoutSeconds": 1}}]'
+    oc -n production scale --replicas=1 dc/vektor

@@ -1,0 +1,42 @@
+---
+- copy:
+    dest: /tmp/pv.yaml
+    content: |
+        kind: PersistentVolume
+        apiVersion: v1
+        metadata:
+            name: vektor-pv-volume
+            labels:
+                data: "production"
+        spec:
+            capacity:
+                storage: 10Mi
+            accessModes:
+                - ReadWriteOnce
+            hostPath:
+                path: "/tmp"
+    backup: no
+- copy:
+    dest: /tmp/pvc.yaml
+    content: |
+        kind: PersistentVolumeClaim
+        apiVersion: v1
+        metadata:
+            name: vektor-pv-claim
+        spec:
+            selector:
+                matchLabels:
+                    production: "data"
+            accessModes:
+                - ReadWriteOnce
+            resources:
+                requests:
+                    storage: 10Mi
+    backup: no
+- shell: |
+    oc apply -f /tmp/pv.yaml
+    oc apply -f /tmp/pvc.yaml
+    oc -n production patch dc/vektor --type='json' -p='[{"op": "add", "path": "/spec/template/spec/volumes", "value": [{"name": "data-volume", "persistentVolumeClaim": {"claimName": "vektor-pv-claim"}}]}]'
+    oc -n production patch dc/vektor --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/volumeMounts", "value": [{"mountPath": "/mnt/data", "name": "data-volume"}]}]'
+    oc -n production scale --replicas=1 dc/vektor
+    oc adm policy add-cluster-role-to-user cluster-reader admin

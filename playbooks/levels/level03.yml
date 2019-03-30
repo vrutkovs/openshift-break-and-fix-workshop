@@ -1,0 +1,13 @@
+---
+- shell: |
+    oc -n production create serviceaccount i-can-run-as-root
+    oc -n production adm policy add-scc-to-user privileged -z i-can-run-as-root
+
+    oc -n production patch dc/vektor --type='json' -p='[{"op": "remove", "path": "/spec/triggers/0"}]'
+    oc -n production patch dc/vektor --type='json' -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "quay.io/vrutkovs/vektor:latest"}]'
+    oc -n production delete rc --all
+    oc -n production scale --replicas=1 dc/vektor
+    # FIXME: gotta do this twice
+    oc -n production patch dc/vektor --type='json' -p='[{"op": "remove", "path": "/spec/triggers/0"}]'
+    oc -n production patch dc/vektor --type='json' -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "quay.io/vrutkovs/vektor:latest"}]'
+    oc -n production delete rc --all

@@ -1,0 +1,147 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+  - name: create VPC
+    ec2_vpc_net:
+      name: "{{ vm_prefix }}-vpc"
+      cidr_block: 10.0.0.0/24
+      region: "{{ aws_region }}"
+      tags: "{{ aws_vpc_tags }}"
+      # tenancy: dedicated
+    register: aws_vpc
+    vars:
+      aws_vpc_tags: |
+        {
+          "kubernetes.io/cluster/{{ aws_cluster_id }}": "true",
+          "expirationDate": "{{ aws_expiration_date }}"
+        }
+
+  - name: create subnet
+    ec2_vpc_subnet:
+      state: present
+      region: "{{ aws_region }}"
+      vpc_id: "{{ aws_vpc.vpc.id }}"
+      cidr: 10.0.0.0/24
+      resource_tags: "{{ aws_subnet_tags }}"
+    register: aws_subnet
+    vars:
+      aws_subnet_tags: |
+        {
+          "kubernetes.io/cluster/{{ aws_cluster_id }}": "true",
+          "expirationDate": "{{ aws_expiration_date }}"
+        }
+
+  - name: create IGW
+    ec2_vpc_igw:
+      vpc_id: "{{ aws_vpc.vpc.id }}"
+      region: "{{ aws_region }}"
+      state: "present"
+      tags: "{{ aws_igw_tags }}"
+    register: aws_igw
+    vars:
+      aws_igw_tags: |
+        {
+          "kubernetes.io/cluster/{{ aws_cluster_id }}": "true",
+          "expirationDate": "{{ aws_expiration_date }}"
+        }
+
+  - name: route IGW
+    ec2_vpc_route_table:
+      vpc_id: "{{ aws_vpc.vpc.id }}"
+      region: "{{ aws_region }}"
+      subnets:
+        - "{{  aws_subnet.subnet.id }}"
+      routes:
+        - dest: 0.0.0.0/0
+          gateway_id: "{{ aws_igw.gateway_id }}"
+      tags: "{{ aws_route_tags }}"
+    vars:
+      aws_route_tags: |
+        {
+          "kubernetes.io/cluster/{{ aws_cluster_id }}": "true",
+          "expirationDate": "{{ aws_expiration_date }}"
+        }
+
+  - name: create security group
+    ec2_group:
+      name: "{{ vm_prefix }}-sg"
+      description: "Openshift Ansible SG for {{ vm_prefix }}"
+      vpc_id: "{{ aws_vpc.vpc.id }}"
+      region: "{{ aws_region }}"
+      rules:
+      - proto: all
+        cidr_ip: 0.0.0.0/0
+      rules_egress:
+      - proto: all
+        cidr_ip: 0.0.0.0/0
+      tags: "{{ aws_sg_tags }}"
+    register: aws_sg
+    vars:
+      aws_sg_tags: |
+        {
+          "kubernetes.io/cluster/{{ aws_cluster_id }}": "true",
+          "expirationDate": "{{ aws_expiration_date }}"
+        }
+
+  - name: create a VM
+    ec2:
+      region: "{{ aws_region }}"
+      key_name: "{{ aws_key }}"
+      instance_type: "{{ item.aws_flavor }}"
+      image: "{{ item.aws_image | default(aws_image) }}"
+      wait: yes
+      group_id: "{{ aws_sg.group_id }}"
+      count: 1
+      vpc_subnet_id: "{{ aws_subnet.subnet.id }}"
+      assign_public_ip: yes
+      instance_tags:
+          '{
+          "Name": "{{ item.name_template }}",
+          "kubernetes.io/cluster/{{ aws_cluster_id }}": "true",
+          "expirationDate": "{{ aws_expiration_date }}" }'
+    register: ec2
+    with_items: "{{ vms }}"
+
+  # This required to plant a new private key
+  - name: Add machine to inventory
+    add_host:
+      name: "{{ item.instances.0.tags.Name }}"
+      ansible_host: "{{ item.instances.0.public_ip }}"
+      ansible_user: "{{ item.aws_user | default(aws_user)}}"
+      ansible_ssh_private_key_file: "{{ initial_privatekey }}"
+      ansible_become: true
+      groups: "nodes"
+    with_items: "{{ ec2.results }}"
+
+  - name: write the inventory
+    template:
+      src: ./templates/inventory.j2
+      dest: "../inventory/{{ item.instances.0.tags.Name }}"
+    with_items: "{{ ec2.results }}"
+
+  - name: write hostvars
+    template:
+      src: ./templates/hostvars.yml.j2
+      dest: "../inventory/host_vars/{{ item.instances.0.tags.Name }}.yml"
+    with_items: "{{ ec2.results }}"
+
+- hosts: nodes
+  gather_facts: no
+  become: true
+  tasks:
+    - wait_for_connection: {}
+    - setup: {}
+    - package:
+        name: '*'
+        state: latest
+    - shell: "sleep 1 && systemctl reboot"
+      ignore_errors: true
+      ignore_unreachable: true
+    - wait_for_connection: {}
+    - name: Add authorized key
+      authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        key: "{{ lookup('file', 'files/ssh-publickey') }}"

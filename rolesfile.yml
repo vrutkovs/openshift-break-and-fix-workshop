@@ -1,0 +1,3 @@
+- name: openshift-ansible
+  src: https://github.com/openshift/openshift-ansible
+  version: openshift-ansible-3.11.108-1

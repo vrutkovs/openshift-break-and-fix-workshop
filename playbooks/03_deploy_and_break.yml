@@ -1,0 +1,14 @@
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - shell: |
+        oc delete project production || true
+        oc adm policy add-cluster-role-to-user cluster-admin clusteradmin
+        oc new-project production
+        oc adm policy add-role-to-user admin admin -n production
+        oc -n production import-image nginx:1.14 --from docker.io/centos/nginx-114-centos7 --confirm
+        oc -n production new-app nginx:1.14~https://github.com/vrutkovs/vektor.git
+        oc -n production scale --replicas=0 dc/vektor
+        oc -n production create route edge --service=vektor --hostname="{{ inventory_hostname.split('-')[1] }}.vrutkovs.eu"
+    - include_tasks: "levels/level{{level}}.yml"

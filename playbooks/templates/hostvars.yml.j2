@@ -1,0 +1,5 @@
+aws_id: "{{ item.instances.0.id }}"
+
+ansible_host: "{{ item.instances.0.public_ip }}"
+
+openshift_node_group_name: "node-config-all-in-one"

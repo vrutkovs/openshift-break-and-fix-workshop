@@ -1,0 +1,4 @@
+---
+- shell: |
+    oc -n production patch svc/vektor -p '{"spec":{"selector":{"app": "production"}}}'
+    oc -n production scale --replicas=1 dc/vektor

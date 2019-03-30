@@ -1,0 +1,6 @@
+---
+- shell: |
+    oc patch deployment/prod -p '{"spec":{"template":{"spec": {"initContainers": [{"command": ["sh", "-c", "until nslookup db.svc.database.cluster.locale; do sleep 2; done;"], "image": "busybox:1.28", "name": "init-prod"}]}}}}'
+    oc create project database
+    oc create service clusterip db --clusterip="None"
+    oc -n production scale --replicas=1 dc/vektor

@@ -1,0 +1,13 @@
+[OSEv3:children]
+masters
+etcd
+nodes
+
+[masters]
+{{ item.instances.0.tags.Name }}
+
+[etcd]
+{{ item.instances.0.tags.Name }}
+
+[nodes]
+{{ item.instances.0.tags.Name }}
